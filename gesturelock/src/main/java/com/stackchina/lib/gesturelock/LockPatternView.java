@@ -15,14 +15,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import cn.vpfinance.android.R;
-
 
 /**
  * Displays and detects the user's unlock attempt, which is a drag of a finger
@@ -32,6 +30,9 @@ import cn.vpfinance.android.R;
  * "correct" states.
  */
 public class LockPatternView extends View {
+
+	private static final String DEBUG_TAG = LockPatternView.class.getSimpleName();
+
 	// Aspect当画的时候用的Aspect to use when rendering this view
 	private static final int ASPECT_SQUARE = 0;
 	// View will be the minimum of width/height
@@ -441,8 +442,10 @@ public class LockPatternView extends View {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		final int width = MeasureSpec.getSize(widthMeasureSpec);
 		final int height = MeasureSpec.getSize(heightMeasureSpec);
-		int viewWidth = width;
-		int viewHeight = height;
+
+		int viewWidth = width - getPaddingLeft() - getPaddingRight();
+		int viewHeight = height - getPaddingTop() - getPaddingBottom();
+
 		switch (mAspect) {
 		case ASPECT_SQUARE:
 			viewWidth = viewHeight = Math.min(width, height);
@@ -1017,14 +1020,61 @@ public class LockPatternView extends View {
 	}
 
 	public String getPatternString() {
-		return LockPatternUtils.patternToString(mPattern);
+		return patternToString(mPattern);
+	}
+
+	/**
+	 * Deserialize a pattern.
+	 *
+	 * @param string
+	 *            The pattern serialized with {@link #patternToString}
+	 * @return The pattern.
+	 */
+	public static List<LockPatternView.Cell> stringToPattern(String string) {
+		List<LockPatternView.Cell> result = new ArrayList();
+
+		final byte[] bytes = string.getBytes();
+		for (int i = 0; i < bytes.length; i++) {
+			byte b = bytes[i];
+			result.add(LockPatternView.Cell.of(b / 3, b % 3));
+		}
+		return result;
+	}
+
+	/**
+	 * Serialize a pattern.
+	 *
+	 * @param pattern
+	 *            The pattern.
+	 * @return The pattern in string form.
+	 *
+	 */
+	public static String patternToString(List<LockPatternView.Cell> pattern) {
+		if (pattern == null) {
+			return "";
+		}
+		final int patternSize = pattern.size();
+
+		byte[] res = new byte[patternSize];
+		for (int i = 0; i < patternSize; i++) {
+			LockPatternView.Cell cell = pattern.get(i);
+			res[i] = (byte) (cell.getRow() * 3 + cell.getColumn());
+		}
+		return arrayToString(res);
+	}
+
+	public static final String arrayToString(byte[] bytes) {
+		StringBuffer buff = new StringBuffer();
+		for (int i = 0; i < bytes.length; i++) {
+			buff.append(bytes[i]);
+		}
+		return buff.toString();
 	}
 
 	@Override
 	protected Parcelable onSaveInstanceState() {
 		Parcelable superState = super.onSaveInstanceState();
-		return new SavedState(superState,
-				LockPatternUtils.patternToString(mPattern),
+		return new SavedState(superState, patternToString(mPattern),
 				mPatternDisplayMode.ordinal(), mInputEnabled, mInStealthMode,
 				mTactileFeedbackEnabled);
 	}
@@ -1033,8 +1083,7 @@ public class LockPatternView extends View {
 	protected void onRestoreInstanceState(Parcelable state) {
 		final SavedState ss = (SavedState) state;
 		super.onRestoreInstanceState(ss.getSuperState());
-		setPattern(DisplayMode.Correct,
-				LockPatternUtils.stringToPattern(ss.getSerializedPattern()));
+		setPattern(DisplayMode.Correct, stringToPattern(ss.getSerializedPattern()));
 		mPatternDisplayMode = DisplayMode.values()[ss.getDisplayMode()];
 		mInputEnabled = ss.isInputEnabled();
 		mInStealthMode = ss.isInStealthMode();
