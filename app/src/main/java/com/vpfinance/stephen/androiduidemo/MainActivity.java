@@ -2,56 +2,40 @@ package com.vpfinance.stephen.androiduidemo;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.ScaleAnimation;
 import android.widget.TextView;
 
-
 public class MainActivity extends ActionBarActivity {
-
-    private TextView mBtnButton1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mBtnButton1 = (TextView) findViewById(R.id.button_1);
-        mBtnButton1.setOnClickListener(new View.OnClickListener() {
+        final PolygonView polygonView1 = (PolygonView) findViewById(R.id.polygon1);
+        final PolygonView polygonView2 = (PolygonView) findViewById(R.id.polygon2);
+        final PolygonView polygonView3 = (PolygonView) findViewById(R.id.polygon3);
+        final PolygonView polygonView4 = (PolygonView) findViewById(R.id.polygon4);
+        TextView click1 = (TextView) findViewById(R.id.tvClick1);
+        click1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ScaleAnimation scaleAnimation = new ScaleAnimation(0.5f, 1.0f, 0.5f, 1.0f);
-                scaleAnimation.setInterpolator(new AccelerateInterpolator());
-                scaleAnimation.setDuration(2000);
-                v.startAnimation(scaleAnimation);
+                polygonView1.setIndeterminate(true);
+                polygonView2.setIndeterminate(true);
+                polygonView3.setIndeterminate(true);
+                polygonView4.setIndeterminate(true);
             }
         });
-
+        TextView click2 = (TextView) findViewById(R.id.tvClick2);
+        click2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                polygonView1.stopAnimate();
+                polygonView2.stopAnimate();
+                polygonView3.stopAnimate();
+                polygonView4.stopAnimate();
+            }
+        });
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
